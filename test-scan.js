@@ -21,7 +21,7 @@ const res = {
 };
 
 // require('dotenv').config(); // This will load SERP_API_KEY from .env if dotenv is installed, but since there's no package.json we can just set it manually.
-process.env.SERP_API_KEY = "954688dfb6a87aa36c4b7e9f5590f6320618c9768f2189f2c1b076a8c717a24c";
+process.env.SERP_API_KEY = "5adaf76ba772a9017e807dadd617aa3de55d4558ff199ffe1d1124dcdcf63f56";
 
 async function run() {
   console.log("Testing exact match...");

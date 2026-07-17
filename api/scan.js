@@ -55,7 +55,8 @@ module.exports = async function handler(req, res) {
   try {
     const searchRes = await fetch(searchUrl);
     if (!searchRes.ok) {
-      throw new Error(`SerpAPI error: ${searchRes.statusText}`);
+      const errText = await searchRes.text();
+      throw new Error(`SerpAPI error: ${searchRes.status} ${errText}`);
     }
     const searchData = await searchRes.json();
     const results = searchData.organic_results || [];
