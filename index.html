@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OriginScan · Internet Originality Scanner</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #eef1f4;
+      --card-bg: #ffffff;
+      --accent: #e8542f;
+      --accent-hover: #d14624;
+      --text-main: #1f2937;
+      --text-muted: #6b7280;
+      --border: #e5e7eb;
+      --green: #1f9d6b;
+      --amber: #d99017;
+      --red: #d43b3b;
+      --green-light: #e8f5f0;
+      --amber-light: #fbf4e8;
+      --red-light: #fbebeb;
+    }
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background-color: var(--bg);
+      color: var(--text-main);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Header */
+    header {
+      background-color: #111827;
+      color: #fff;
+      padding: 1rem 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    
+    .header-left {
+      font-weight: 600;
+      font-size: 1.125rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .header-right {
+      font-size: 0.875rem;
+      color: #9ca3af;
+    }
+
+    /* Layout Container */
+    .container {
+      max-width: 900px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+
+    /* Cards */
+    .card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -2px rgba(0,0,0,0.025);
+      padding: 2rem;
+      margin-bottom: 1.5rem;
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+
+    p.subtitle {
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+    }
+
+    /* Input Area */
+    textarea {
+      width: 100%;
+      height: 250px;
+      padding: 1rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 1rem;
+      resize: vertical;
+      transition: border-color 0.2s;
+    }
+
+    textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(232, 84, 47, 0.1);
+    }
+
+    .controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 1rem;
+    }
+
+    .word-count {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .buttons {
+      display: flex;
+      gap: 1rem;
+    }
+
+    button {
+      padding: 0.625rem 1.25rem;
+      border-radius: 6px;
+      font-weight: 500;
+      font-size: 0.9375rem;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+
+    .btn-secondary {
+      background-color: #f3f4f6;
+      color: var(--text-main);
+    }
+
+    .btn-secondary:hover {
+      background-color: #e5e7eb;
+    }
+
+    .btn-primary {
+      background-color: var(--accent);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background-color: var(--accent-hover);
+    }
+    
+    .btn-primary:disabled {
+      background-color: #fca5a5;
+      cursor: not-allowed;
+    }
+
+    /* Warnings */
+    #api-warning {
+      display: none;
+      background-color: var(--amber-light);
+      border-left: 4px solid var(--amber);
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+      border-radius: 4px;
+      color: #92400e;
+      font-size: 0.9375rem;
+    }
+
+    /* Progress UI */
+    #progress-ui {
+      display: none;
+    }
+
+    .progress-bar-bg {
+      width: 100%;
+      height: 8px;
+      background-color: var(--border);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 0.5rem;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background-color: var(--accent);
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+
+    .progress-text {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      text-align: center;
+    }
+
+    /* Results */
+    #results-ui {
+      display: none;
+    }
+
+    .score-section {
+      display: flex;
+      align-items: center;
+      gap: 3rem;
+      padding-bottom: 2rem;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 2rem;
+    }
+
+    .gauge-container {
+      position: relative;
+      width: 160px;
+      height: 160px;
+    }
+
+    .gauge-svg {
+      transform: rotate(-90deg);
+      width: 100%;
+      height: 100%;
+    }
+
+    .gauge-bg {
+      fill: none;
+      stroke: #f3f4f6;
+      stroke-width: 10;
+    }
+
+    .gauge-fill {
+      fill: none;
+      stroke: var(--green);
+      stroke-width: 10;
+      stroke-linecap: round;
+      stroke-dasharray: 440; /* 2 * PI * 70 */
+      stroke-dashoffset: 440;
+      transition: stroke-dashoffset 1s ease, stroke 0.3s ease;
+    }
+
+    .gauge-text {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .gauge-percent {
+      font-size: 2.5rem;
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .gauge-label {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .verdict-box {
+      flex: 1;
+      padding: 1.5rem;
+      border-radius: 8px;
+      background-color: var(--green-light);
+      border-left: 4px solid var(--green);
+    }
+    
+    .verdict-box h2 {
+      color: #065f46;
+      font-size: 1.25rem;
+      margin-bottom: 0.5rem;
+    }
+    .verdict-box p {
+      color: #047857;
+      font-size: 0.9375rem;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .stat-chip {
+      background: #f9fafb;
+      border: 1px solid var(--border);
+      padding: 1rem;
+      border-radius: 8px;
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+
+    .stat-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* Line by line list */
+    .line-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .line-item {
+      padding: 1rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: #fff;
+    }
+
+    .line-text {
+      font-size: 1rem;
+      margin-bottom: 0.75rem;
+      line-height: 1.6;
+    }
+
+    .tag {
+      display: inline-block;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .tag.original { background: #f3f4f6; color: #4b5563; }
+    .tag.exact { background: var(--red-light); color: var(--red); }
+    .tag.close { background: var(--amber-light); color: var(--amber); }
+    .tag.paraphrase { background: #eff6ff; color: #2563eb; }
+
+    .line-meta {
+      margin-top: 0.75rem;
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      background: #f9fafb;
+      padding: 0.75rem;
+      border-radius: 6px;
+    }
+    
+    .line-meta a {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 500;
+    }
+    
+    .line-meta a:hover {
+      text-decoration: underline;
+    }
+
+    .matched-chunk {
+      margin-top: 0.5rem;
+      font-style: italic;
+      color: #4b5563;
+    }
+
+    .results-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 1rem;
+      margin-top: 2rem;
+    }
+
+    /* Print Styles */
+    @media print {
+      body {
+        background: white;
+      }
+      header, #input-card, .results-actions {
+        display: none !important;
+      }
+      .card {
+        box-shadow: none;
+        border: none;
+        padding: 0;
+        margin: 0;
+      }
+      .line-item {
+        break-inside: avoid;
+        border: 1px solid #ccc;
+      }
+    }
+
+    /* Mobile */
+    @media (max-width: 640px) {
+      .score-section {
+        flex-direction: column;
+        gap: 1.5rem;
+        text-align: center;
+      }
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      header {
+        flex-direction: column;
+        gap: 0.5rem;
+        align-items: flex-start;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="header-left">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--accent)"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+      OriginScan
+    </div>
+    <div class="header-right">
+      by Muddassir Ali · plagiarism.muddassirali.com
+    </div>
+  </header>
+
+  <div class="container">
+    <div id="api-warning">
+      <strong>Configuration Notice:</strong> SERP_API_KEY environment variable is missing. Scanning is disabled; all lines will be marked as original. Please add your key in Vercel settings and redeploy.
+    </div>
+
+    <!-- INPUT CARD -->
+    <div class="card" id="input-card">
+      <h1>Check for Plagiarism & Paraphrasing</h1>
+      <p class="subtitle">Paste your article or blog draft below to check every sentence against the live internet.</p>
+      
+      <textarea id="text-input" placeholder="Paste your text here..."></textarea>
+      
+      <div class="controls">
+        <div class="word-count" id="word-count">0 words</div>
+        <div class="buttons">
+          <button class="btn-secondary" id="btn-sample">Load sample</button>
+          <button class="btn-primary" id="btn-scan" disabled>Scan the internet</button>
+        </div>
+      </div>
+      
+      <div id="progress-ui">
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill" id="progress-fill"></div>
+        </div>
+        <div class="progress-text" id="progress-text">Searching the internet...</div>
+      </div>
+    </div>
+
+    <!-- RESULTS CARD -->
+    <div class="card" id="results-ui">
+      <div class="score-section">
+        <div class="gauge-container">
+          <svg class="gauge-svg" viewBox="0 0 160 160">
+            <circle class="gauge-bg" cx="80" cy="80" r="70" />
+            <circle class="gauge-fill" id="gauge-fill" cx="80" cy="80" r="70" />
+          </svg>
+          <div class="gauge-text">
+            <div class="gauge-percent" id="score-percent">0%</div>
+            <div class="gauge-label">Original</div>
+          </div>
+        </div>
+        
+        <div class="verdict-box" id="verdict-box">
+          <h2 id="verdict-title">Reviewing...</h2>
+          <p id="verdict-desc">Please wait.</p>
+        </div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-chip">
+          <div class="stat-value" id="stat-exact" style="color: var(--red)">0</div>
+          <div class="stat-label">Exact copies</div>
+        </div>
+        <div class="stat-chip">
+          <div class="stat-value" id="stat-close" style="color: var(--amber)">0</div>
+          <div class="stat-label">Close copies</div>
+        </div>
+        <div class="stat-chip">
+          <div class="stat-value" id="stat-para" style="color: #2563eb">0</div>
+          <div class="stat-label">Paraphrased</div>
+        </div>
+        <div class="stat-chip">
+          <div class="stat-value" id="stat-lines">0</div>
+          <div class="stat-label">Lines scanned</div>
+        </div>
+      </div>
+
+      <div class="line-list" id="line-list">
+        <!-- populated by JS -->
+      </div>
+
+      <div class="results-actions">
+        <button class="btn-secondary" id="btn-new">New scan</button>
+        <button class="btn-primary" id="btn-export">Export report (PDF)</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const elInput = document.getElementById('text-input');
+    const elWordCount = document.getElementById('word-count');
+    const btnSample = document.getElementById('btn-sample');
+    const btnScan = document.getElementById('btn-scan');
+    
+    const uiInputCard = document.getElementById('input-card');
+    const uiProgress = document.getElementById('progress-ui');
+    const uiResults = document.getElementById('results-ui');
+    const elApiWarning = document.getElementById('api-warning');
+
+    const progressFill = document.getElementById('progress-fill');
+    const progressText = document.getElementById('progress-text');
+
+    const sampleText = `The James Webb Space Telescope is the largest optical telescope in space. It is designed to conduct infrared astronomy, which allows it to see objects too old, distant, and faint for the Hubble Space Telescope. 
+Many people believe that it is the most amazing engineering feat of the 21st century. It was launched on Christmas Day in 2021 from Kourou, French Guiana. 
+In completely unrelated news, I am writing a completely original sentence right now that nobody has ever written before in the exact history of the universe, and I am quite certain it will be marked as one hundred percent original by any algorithm.`;
+
+    // Word count logic
+    function getWordCount(text) {
+      const words = text.trim().split(/\s+/).filter(w => w.length > 0);
+      return words.length;
+    }
+
+    elInput.addEventListener('input', () => {
+      const count = getWordCount(elInput.value);
+      elWordCount.textContent = count === 1 ? '1 word' : \`\${count} words\`;
+      btnScan.disabled = count < 30;
+    });
+
+    btnSample.addEventListener('click', () => {
+      elInput.value = sampleText;
+      elInput.dispatchEvent(new Event('input'));
+    });
+
+    function splitSentences(text) {
+      text = text.replace(/\\s+/g, ' ').trim();
+      // Split on punctuation followed by space and capital/number
+      const raw = text.split(/(?<=[.!?])\s+(?=[A-Z0-9])/);
+      return raw.filter(s => s.split(' ').length >= 6);
+    }
+
+    btnScan.addEventListener('click', async () => {
+      const text = elInput.value;
+      const sentences = splitSentences(text);
+      if (sentences.length === 0) return alert('No valid sentences found (minimum 6 words each).');
+
+      // Setup UI for scanning
+      elInput.disabled = true;
+      btnScan.style.display = 'none';
+      btnSample.style.display = 'none';
+      uiProgress.style.display = 'block';
+      elApiWarning.style.display = 'none';
+      
+      let completed = 0;
+      const total = sentences.length;
+      const results = new Array(total);
+      let missingKeyWarning = false;
+
+      const updateProgress = () => {
+        const percent = Math.round((completed / total) * 100);
+        progressFill.style.width = \`\${percent}%\`;
+        progressText.textContent = \`Searching the internet — line \${completed} of \${total}…\`;
+      };
+
+      updateProgress();
+
+      // Create queue and workers
+      const queue = sentences.map((line, idx) => ({ line, idx }));
+      
+      const worker = async () => {
+        while (queue.length > 0) {
+          const { line, idx } = queue.shift();
+          try {
+            const res = await fetch('/api/scan', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ line })
+            });
+            const data = await res.json();
+            if (data.no_key) missingKeyWarning = true;
+            results[idx] = { line, ...data };
+          } catch (err) {
+            results[idx] = { line, type: 'original', error: true };
+          }
+          completed++;
+          updateProgress();
+        }
+      };
+
+      // Run max 3 in parallel
+      const workers = [];
+      for (let i = 0; i < Math.min(3, queue.length); i++) {
+        workers.push(worker());
+      }
+
+      await Promise.all(workers);
+
+      // Render results
+      renderResults(results, missingKeyWarning, text);
+    });
+
+    function renderResults(results, missingKeyWarning, originalText) {
+      if (missingKeyWarning) {
+        elApiWarning.style.display = 'block';
+      }
+      
+      uiInputCard.style.display = 'none';
+      uiResults.style.display = 'block';
+
+      let exactCount = 0;
+      let closeCount = 0;
+      let paraCount = 0;
+      let flaggedWords = 0;
+      
+      const listEl = document.getElementById('line-list');
+      listEl.innerHTML = '';
+
+      results.forEach(res => {
+        const wordCount = getWordCount(res.line);
+        if (res.type === 'exact copy') { exactCount++; flaggedWords += wordCount; }
+        if (res.type === 'close copy') { closeCount++; flaggedWords += wordCount; }
+        if (res.type === 'paraphrase') { paraCount++; flaggedWords += wordCount; }
+
+        // Render line item
+        const item = document.createElement('div');
+        item.className = 'line-item';
+        
+        let tagClass = res.type === 'exact copy' ? 'exact' 
+                     : res.type === 'close copy' ? 'close'
+                     : res.type === 'paraphrase' ? 'paraphrase' : 'original';
+                     
+        let html = \`<div class="line-text">\${escapeHtml(res.line)}</div>
+                    <div class="tag \${tagClass}">\${res.type}</div>\`;
+
+        if (res.url) {
+          const pct = Math.round(res.score * 100);
+          html += \`<div class="line-meta">
+            Matched on: <a href="\${escapeHtml(res.url)}" target="_blank" rel="noopener">\${escapeHtml(res.title || res.url)}</a> · \${pct}% match
+            <div class="matched-chunk">Found online: "\${escapeHtml(res.matched)}..."</div>
+          </div>\`;
+        }
+
+        item.innerHTML = html;
+        listEl.appendChild(item);
+      });
+
+      // Update Stats
+      document.getElementById('stat-exact').textContent = exactCount;
+      document.getElementById('stat-close').textContent = closeCount;
+      document.getElementById('stat-para').textContent = paraCount;
+      document.getElementById('stat-lines').textContent = results.length;
+
+      // Calculate originality
+      const totalWords = getWordCount(originalText);
+      const originalWords = Math.max(0, totalWords - flaggedWords);
+      const score = totalWords > 0 ? Math.round((originalWords / totalWords) * 100) : 100;
+
+      // Update Gauge
+      document.getElementById('score-percent').textContent = \`\${score}%\`;
+      
+      // Gauge SVG calculation (circumference = 2 * PI * 70 = 439.82)
+      const c = 440;
+      const offset = c - (score / 100) * c;
+      const gaugeFill = document.getElementById('gauge-fill');
+      gaugeFill.style.strokeDashoffset = offset;
+
+      const vBox = document.getElementById('verdict-box');
+      const vTitle = document.getElementById('verdict-title');
+      const vDesc = document.getElementById('verdict-desc');
+
+      if (score >= 85) {
+        gaugeFill.style.stroke = 'var(--green)';
+        vBox.style.backgroundColor = 'var(--green-light)';
+        vBox.style.borderLeftColor = 'var(--green)';
+        vTitle.style.color = '#065f46';
+        vDesc.style.color = '#047857';
+        vTitle.textContent = 'Cleared — safe to publish';
+        vDesc.textContent = 'This text appears to be highly original. No significant matching content was found online.';
+      } else if (score >= 70) {
+        gaugeFill.style.stroke = 'var(--amber)';
+        vBox.style.backgroundColor = 'var(--amber-light)';
+        vBox.style.borderLeftColor = 'var(--amber)';
+        vTitle.style.color = '#92400e';
+        vDesc.style.color = '#b45309';
+        vTitle.textContent = 'Send back for revision';
+        vDesc.textContent = 'Some matches or paraphrased sections were found. Consider rewriting the flagged lines.';
+      } else {
+        gaugeFill.style.stroke = 'var(--red)';
+        vBox.style.backgroundColor = 'var(--red-light)';
+        vBox.style.borderLeftColor = 'var(--red)';
+        vTitle.style.color = '#991b1b';
+        vDesc.style.color = '#b91c1c';
+        vTitle.textContent = 'Do not publish as-is';
+        vDesc.textContent = 'High level of matching content detected. This document requires a major rewrite.';
+      }
+    }
+
+    function escapeHtml(unsafe) {
+      if (!unsafe) return '';
+      return unsafe
+           .replace(/&/g, "&amp;")
+           .replace(/</g, "&lt;")
+           .replace(/>/g, "&gt;")
+           .replace(/"/g, "&quot;")
+           .replace(/'/g, "&#039;");
+    }
+
+    // Actions
+    document.getElementById('btn-new').addEventListener('click', () => {
+      window.location.reload();
+    });
+
+    document.getElementById('btn-export').addEventListener('click', () => {
+      window.print();
+    });
+
+  </script>
+</body>
+</html>
