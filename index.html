@@ -523,16 +523,26 @@
 Many people believe that it is the most amazing engineering feat of the 21st century. It was launched on Christmas Day in 2021 from Kourou, French Guiana. 
 In completely unrelated news, I am writing a completely original sentence right now that nobody has ever written before in the exact history of the universe, and I am quite certain it will be marked as one hundred percent original by any algorithm.`;
 
-    // Word count logic
+    // Word and character count logic
     function getWordCount(text) {
       const words = text.trim().split(/\s+/).filter(w => w.length > 0);
       return words.length;
     }
 
     elInput.addEventListener('input', () => {
-      const count = getWordCount(elInput.value);
-      elWordCount.textContent = count === 1 ? '1 word' : \`\${count} words\`;
-      btnScan.disabled = count < 30;
+      const text = elInput.value;
+      const wordCount = getWordCount(text);
+      const charCount = text.length;
+      
+      elWordCount.textContent = `${wordCount} ${wordCount === 1 ? 'word' : 'words'} | ${charCount} ${charCount === 1 ? 'character' : 'characters'}`;
+      
+      if (wordCount < 6) {
+        btnScan.disabled = true;
+        btnScan.textContent = `Scan (need ${6 - wordCount} more ${6 - wordCount === 1 ? 'word' : 'words'})`;
+      } else {
+        btnScan.disabled = false;
+        btnScan.textContent = 'Scan the internet';
+      }
     });
 
     btnSample.addEventListener('click', () => {
