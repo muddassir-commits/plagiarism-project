@@ -576,8 +576,8 @@ In completely unrelated news, I am writing a completely original sentence right 
 
       const updateProgress = () => {
         const percent = Math.round((completed / total) * 100);
-        progressFill.style.width = \`\${percent}%\`;
-        progressText.textContent = \`Searching the internet — line \${completed} of \${total}…\`;
+        progressFill.style.width = `${percent}%`;
+        progressText.textContent = `Searching the internet — line ${completed} of ${total}…`;
       };
 
       updateProgress();
@@ -647,15 +647,15 @@ In completely unrelated news, I am writing a completely original sentence right 
                      : res.type === 'close copy' ? 'close'
                      : res.type === 'paraphrase' ? 'paraphrase' : 'original';
                      
-        let html = \`<div class="line-text">\${escapeHtml(res.line)}</div>
-                    <div class="tag \${tagClass}">\${res.type}</div>\`;
+        let html = `<div class="line-text">${escapeHtml(res.line)}</div>
+                    <div class="tag ${tagClass}">${res.type}</div>`;
 
         if (res.url) {
           const pct = Math.round(res.score * 100);
-          html += \`<div class="line-meta">
-            Matched on: <a href="\${escapeHtml(res.url)}" target="_blank" rel="noopener">\${escapeHtml(res.title || res.url)}</a> · \${pct}% match
-            <div class="matched-chunk">Found online: "\${escapeHtml(res.matched)}..."</div>
-          </div>\`;
+          html += `<div class="line-meta">
+            Matched on: <a href="${escapeHtml(res.url)}" target="_blank" rel="noopener">${escapeHtml(res.title || res.url)}</a> · ${pct}% match
+            <div class="matched-chunk">Found online: "${escapeHtml(res.matched)}..."</div>
+          </div>`;
         }
 
         item.innerHTML = html;
@@ -674,7 +674,7 @@ In completely unrelated news, I am writing a completely original sentence right 
       const score = totalWords > 0 ? Math.round((originalWords / totalWords) * 100) : 100;
 
       // Update Gauge
-      document.getElementById('score-percent').textContent = \`\${score}%\`;
+      document.getElementById('score-percent').textContent = `${score}%`;
       
       // Gauge SVG calculation (circumference = 2 * PI * 70 = 439.82)
       const c = 440;
