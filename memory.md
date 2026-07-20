@@ -6,27 +6,34 @@
 - **Tech Stack:** Vanilla HTML/JS frontend (`index.html`), Node.js Serverless function backend (`api/scan.js`). Deployed on Vercel.
 - **Rules:** No `package.json`, no Python, no npm dependencies. Uses native fetch and SerpAPI.
 
-## Current State
-- ✅ All project files created (`index.html`, `api/scan.js`, `vercel.json`, `README.md`, `.gitignore`).
-- ✅ `.env` created locally with the correct `SERP_API_KEY`.
-- ❌ **Issue:** The user manually uploaded the files to GitHub/Vercel (https://plagiarism-project-one.vercel.app/), but reported that "nothing is working."
-- ❌ **Blocker:** We couldn't diagnose the error or push code automatically because the user's Windows machine lacked **Git** and **Node.js**.
-
-## Next Steps (When user returns)
-When the user returns and says to read this file, execute the following plan:
-
-1. **Verify Installations:**
-   - Run `git --version` and `node -v` to ensure the tools are now available in the terminal PATH.
+## What We Have Done
+1. **Verified Tooling:** Verified that Git and Node.js are correctly installed on the user's Windows machine.
 2. **Local Diagnostics:**
-   - Run `node test-scan.js` locally (since Node is now installed) to test the `api/scan.js` logic and see if SerpAPI is returning errors or if the text scraping is failing.
-3. **Fix the Bugs:**
-   - Based on the local test, fix whatever is causing the app to fail. (Check CORS, Vercel function routing, and SerpAPI limits).
-4. **Git & GitHub Integration:**
-   - Initialize the git repository: `git init`
-   - Link to remote: `git remote add origin https://github.com/muddassir-commits/plagiarism-project.git`
-   - Commit and push the code directly to trigger a fresh, working Vercel deployment.
-5. **Vercel CLI (Optional but helpful):**
-   - If we need live logs, we can install Vercel globally (`npm i -g vercel`) and run `vercel dev` or `vercel --prod` to see exactly what Vercel sees.
+   - Ran `test-scan.js` locally and caught a `401 Unauthorized` error because the test script had a stale/invalid SerpAPI key.
+   - Updated the test script to use the valid key from `.env`, which resulted in successful plagiarism scans locally.
+3. **Enhanced Error Logging:** Modified `api/scan.js` to log exact status codes and response bodies from SerpAPI, making debugging serverless runs much easier.
+4. **Local Dev Server Setup:**
+   - Created `server.js`, a zero-dependency local development server, to bypass Vercel CLI login requirements.
+   - It parses `.env`, mock-runs the `/api/scan` function, and serves `index.html` on `http://localhost:3000/`.
+   - Added `server.js` to `.gitignore` to keep the workspace clean.
+5. **Fixed Syntax Errors:** Fixed critical syntax errors in `index.html` where backticks and placeholders were escaped (e.g. `\`` and `\${}`). These errors crashed the browser JS compilation entirely.
+6. **Vercel Key Configured:** The user added `SERP_API_KEY` to Vercel's Environment Variables.
+7. **Pushed Code:** Committed and pushed all updates to the remote repository on GitHub to trigger a fresh deployment on Vercel.
 
----
-**Note to AI:** Read this file immediately when the new session starts, then proceed with Step 1.
+## Current State
+- The local server `server.js` is set up and functional.
+- The syntax errors in the frontend are resolved, enabling word/character counting and dynamic button states to work properly.
+- All code has been pushed and is up-to-date on GitHub (`main` branch).
+
+## Next Steps
+When you return, here is the plan to resume work:
+
+1. **Verify Vercel Deployment:**
+   - Open the live production deployment link: `https://plagiarism-project-one.vercel.app/`
+   - Test it by typing text, clicking "Load sample", and performing a scan to ensure that the serverless function on Vercel successfully contacts SerpAPI using the new env variable.
+2. **Perform Plagiarism Tests:**
+   - Test with known copied text (e.g. Wikipedia articles) and original text to verify that the scoring categories ("exact copy", "close copy", "paraphrase", and "original") are accurate.
+3. **Automate Browser Testing:**
+   - Once the Playwright driver CDNs are back online, run the browser agent to automate verification of UI/UX, button states, and edge cases.
+4. **Code Clean-up:**
+   - If everything works on production Vercel, we can delete the local helper files (`server.js`, `test-scan.js`) or keep them as standard local testing tools.
