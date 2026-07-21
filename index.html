@@ -876,20 +876,7 @@ In completely unrelated news, I am writing a completely original sentence right 
         document.getElementById(targetId).classList.add('block');
       });
     });
-    const tabPasteText = Array.from(document.querySelectorAll('button')).find(btn => btn.textContent.includes("Paste Text")) || document.querySelectorAll('.border-b-2')[0];
-    if (tabPasteText) {
-      tabPasteText.addEventListener('click', async () => {
-        try {
-          const text = await navigator.clipboard.readText();
-          if (text) {
-            elInput.value = elInput.value ? elInput.value + '\n' + text : text;
-            elInput.dispatchEvent(new Event('input'));
-          }
-        } catch (err) {
-          console.warn('Clipboard access denied or failed:', err);
-        }
-      });
-    }
+
 
     btnSample.addEventListener('click', () => {
       elInput.value = sampleText;
