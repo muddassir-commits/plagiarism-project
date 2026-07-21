@@ -13,13 +13,13 @@ module.exports = async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { line } = req.body || {};
+  const { line, apiKey: customApiKey } = req.body || {};
   if (!line || typeof line !== 'string') {
     return res.status(400).json({ error: 'No line provided' });
   }
 
-  // Missing API Key handling
-  const apiKey = process.env.SERP_API_KEY;
+  // Missing API Key handling (prefer custom key, fallback to env)
+  const apiKey = customApiKey || process.env.SERP_API_KEY;
   if (!apiKey) {
     return res.status(200).json({
       type: 'original',
