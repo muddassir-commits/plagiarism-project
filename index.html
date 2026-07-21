@@ -394,7 +394,7 @@
           </div>
           <div class="bg-white dark:bg-gray-800 p-5 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 flex flex-col justify-between">
             <div class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">AI Probability</div>
-            <div class="text-3xl font-black text-blue-500">2%</div>
+            <div class="text-3xl font-black text-blue-500" id="res-ai-prob">--</div>
           </div>
           <div class="bg-white dark:bg-gray-800 p-5 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 flex flex-col justify-between">
             <div class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Processing Time</div>
@@ -502,13 +502,21 @@
             <h1 class="text-2xl font-bold mb-2 text-gray-900 dark:text-white">API Configuration</h1>
             <p class="text-gray-500 dark:text-gray-400 mb-6 text-sm">Configure your personal SerpApi key to power the internet scraping engine.</p>
             
-            <div class="space-y-4">
+            <div class="space-y-6">
               <div>
-                <label class="block text-sm font-bold text-gray-700 dark:text-gray-200 mb-2">SerpApi Key</label>
+                <label class="block text-sm font-bold text-gray-700 dark:text-gray-200 mb-2">SerpApi Key (Plagiarism Engine)</label>
                 <input type="password" id="input-api-key" placeholder="Enter your SerpApi Key" class="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-colors">
-                <p class="text-xs text-gray-500 mt-2">Your key is securely stored in your browser's LocalStorage and is only sent to the backend during scans.</p>
+                <p class="text-xs text-gray-500 mt-2">Required for internet scraping. Stored locally in browser.</p>
               </div>
-              <button id="btn-save-api" class="px-6 py-3 bg-primary text-white font-bold rounded-lg hover:bg-primaryHover transition-colors">Save API Key</button>
+              <div class="pt-4 border-t border-gray-200 dark:border-gray-700">
+                <label class="block text-sm font-bold text-gray-700 dark:text-gray-200 mb-2 flex items-center gap-2">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                  Hugging Face Access Token (AI Detection Engine)
+                </label>
+                <input type="password" id="input-api-key-ai" placeholder="hf_xxxxxxxxxxxxxxxxxxx" class="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-colors">
+                <p class="text-xs text-gray-500 mt-2">Required for AI vs Human authorship detection. Get a free token at huggingface.co.</p>
+              </div>
+              <button id="btn-save-api" class="px-6 py-3 bg-primary text-white font-bold rounded-lg hover:bg-primaryHover transition-colors">Save API Keys</button>
             </div>
           </div>
         </div>
