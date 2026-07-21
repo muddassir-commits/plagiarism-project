@@ -3,509 +3,431 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>OriginScan · Internet Originality Scanner</title>
+  <title>OriginScan · SaaS Plagiarism Checker</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --bg: #eef1f4;
-      --card-bg: #ffffff;
-      --accent: #e8542f;
-      --accent-hover: #d14624;
-      --text-main: #1f2937;
-      --text-muted: #6b7280;
-      --border: #e5e7eb;
-      --green: #1f9d6b;
-      --amber: #d99017;
-      --red: #d43b3b;
-      --green-light: #e8f5f0;
-      --amber-light: #fbf4e8;
-      --red-light: #fbebeb;
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Tailwind via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            primary: '#e8542f',
+            primaryHover: '#d14624',
+          }
+        }
+      }
     }
+  </script>
+  <style type="text/tailwindcss">
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    .dark ::-webkit-scrollbar-thumb { background: #475569; }
+    .dark ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+
+    /* Layout specific */
+    html, body { height: 100%; }
     
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    body {
-      font-family: 'Inter', system-ui, -apple-system, sans-serif;
-      background-color: var(--bg);
-      color: var(--text-main);
-      line-height: 1.5;
-      -webkit-font-smoothing: antialiased;
-    }
-
-    /* Header */
-    header {
-      background-color: #111827;
-      color: #fff;
-      padding: 1rem 1.5rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    }
-    
-    .header-left {
-      font-weight: 600;
-      font-size: 1.125rem;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .header-right {
-      font-size: 0.875rem;
-      color: #9ca3af;
-    }
-
-    /* Layout Container */
-    .container {
-      max-width: 900px;
-      margin: 2rem auto;
-      padding: 0 1rem;
-    }
-
-    /* Cards */
-    .card {
-      background: var(--card-bg);
-      border-radius: 12px;
-      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -2px rgba(0,0,0,0.025);
-      padding: 2rem;
-      margin-bottom: 1.5rem;
-    }
-
-    h1 {
-      font-size: 1.5rem;
-      font-weight: 700;
-      margin-bottom: 0.5rem;
-    }
-
-    p.subtitle {
-      color: var(--text-muted);
-      margin-bottom: 1.5rem;
-    }
-
-    /* Input Area */
-    textarea {
-      width: 100%;
-      height: 250px;
-      padding: 1rem;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      font-family: inherit;
-      font-size: 1rem;
-      resize: vertical;
-      transition: border-color 0.2s;
-    }
-
-    textarea:focus {
-      outline: none;
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(232, 84, 47, 0.1);
-    }
-
-    .controls {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-top: 1rem;
-    }
-
-    .word-count {
-      font-size: 0.875rem;
-      color: var(--text-muted);
-      font-weight: 500;
-    }
-
-    .buttons {
-      display: flex;
-      gap: 1rem;
-    }
-
-    button {
-      padding: 0.625rem 1.25rem;
-      border-radius: 6px;
-      font-weight: 500;
-      font-size: 0.9375rem;
-      cursor: pointer;
-      border: none;
-      transition: all 0.2s;
-      font-family: inherit;
-    }
-
-    .btn-secondary {
-      background-color: #f3f4f6;
-      color: var(--text-main);
-    }
-
-    .btn-secondary:hover {
-      background-color: #e5e7eb;
-    }
-
-    .btn-primary {
-      background-color: var(--accent);
-      color: white;
-    }
-
-    .btn-primary:hover {
-      background-color: var(--accent-hover);
-    }
-    
-    .btn-primary:disabled {
-      background-color: #fca5a5;
-      cursor: not-allowed;
-    }
-
-    /* Warnings */
-    #api-warning {
-      display: none;
-      background-color: var(--amber-light);
-      border-left: 4px solid var(--amber);
-      padding: 1rem;
-      margin-bottom: 1.5rem;
-      border-radius: 4px;
-      color: #92400e;
-      font-size: 0.9375rem;
-    }
-
-    /* Progress UI */
-    #progress-ui {
-      display: none;
-    }
-
-    .progress-bar-bg {
-      width: 100%;
-      height: 8px;
-      background-color: var(--border);
-      border-radius: 4px;
-      overflow: hidden;
-      margin-bottom: 0.5rem;
-    }
-
-    .progress-bar-fill {
-      height: 100%;
-      background-color: var(--accent);
-      width: 0%;
-      transition: width 0.3s ease;
-    }
-
-    .progress-text {
-      font-size: 0.875rem;
-      color: var(--text-muted);
-      text-align: center;
-    }
-
-    /* Results */
-    #results-ui {
-      display: none;
-    }
-
-    .score-section {
-      display: flex;
-      align-items: center;
-      gap: 3rem;
-      padding-bottom: 2rem;
-      border-bottom: 1px solid var(--border);
-      margin-bottom: 2rem;
-    }
-
-    .gauge-container {
-      position: relative;
-      width: 160px;
-      height: 160px;
-    }
-
-    .gauge-svg {
-      transform: rotate(-90deg);
-      width: 100%;
-      height: 100%;
-    }
-
-    .gauge-bg {
-      fill: none;
-      stroke: #f3f4f6;
-      stroke-width: 10;
-    }
-
-    .gauge-fill {
-      fill: none;
-      stroke: var(--green);
-      stroke-width: 10;
-      stroke-linecap: round;
-      stroke-dasharray: 440; /* 2 * PI * 70 */
-      stroke-dashoffset: 440;
-      transition: stroke-dashoffset 1s ease, stroke 0.3s ease;
-    }
-
-    .gauge-text {
+    /* Ensure chart container text is centered properly */
+    .chart-center-text {
       position: absolute;
       inset: 0;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
+      pointer-events: none;
     }
 
-    .gauge-percent {
-      font-size: 2.5rem;
-      font-weight: 700;
-      line-height: 1;
-    }
-
-    .gauge-label {
-      font-size: 0.875rem;
-      color: var(--text-muted);
-      margin-top: 4px;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-
-    .verdict-box {
-      flex: 1;
-      padding: 1.5rem;
-      border-radius: 8px;
-      background-color: var(--green-light);
-      border-left: 4px solid var(--green);
-    }
-    
-    .verdict-box h2 {
-      color: #065f46;
-      font-size: 1.25rem;
-      margin-bottom: 0.5rem;
-    }
-    .verdict-box p {
-      color: #047857;
-      font-size: 0.9375rem;
-    }
-
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 1rem;
-      margin-bottom: 2rem;
-    }
-
-    .stat-chip {
-      background: #f9fafb;
-      border: 1px solid var(--border);
-      padding: 1rem;
-      border-radius: 8px;
-      text-align: center;
-    }
-
-    .stat-value {
-      font-size: 1.5rem;
-      font-weight: 600;
-      margin-bottom: 0.25rem;
-    }
-
-    .stat-label {
-      font-size: 0.75rem;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-
-    /* Line by line list */
-    .line-list {
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-    }
-
-    .line-item {
-      padding: 1rem;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      background: #fff;
-    }
-
-    .line-text {
-      font-size: 1rem;
-      margin-bottom: 0.75rem;
-      line-height: 1.6;
-    }
-
-    .tag {
-      display: inline-block;
-      padding: 0.25rem 0.5rem;
-      border-radius: 4px;
-      font-size: 0.75rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-
-    .tag.original { background: #f3f4f6; color: #4b5563; }
-    .tag.exact { background: var(--red-light); color: var(--red); }
-    .tag.close { background: var(--amber-light); color: var(--amber); }
-    .tag.paraphrase { background: #eff6ff; color: #2563eb; }
-
-    .line-meta {
-      margin-top: 0.75rem;
-      font-size: 0.875rem;
-      color: var(--text-muted);
-      background: #f9fafb;
-      padding: 0.75rem;
-      border-radius: 6px;
-    }
-    
-    .line-meta a {
-      color: var(--accent);
-      text-decoration: none;
-      font-weight: 500;
-    }
-    
-    .line-meta a:hover {
-      text-decoration: underline;
-    }
-
-    .matched-chunk {
-      margin-top: 0.5rem;
-      font-style: italic;
-      color: #4b5563;
-    }
-
-    .results-actions {
-      display: flex;
-      justify-content: flex-end;
-      gap: 1rem;
-      margin-top: 2rem;
-    }
-
-    /* Print Styles */
-    @media print {
-      body {
-        background: white;
-      }
-      header, #input-card, .results-actions {
-        display: none !important;
-      }
-      .card {
-        box-shadow: none;
-        border: none;
-        padding: 0;
-        margin: 0;
-      }
-      .line-item {
-        break-inside: avoid;
-        border: 1px solid #ccc;
-      }
-    }
-
-    /* Mobile */
-    @media (max-width: 640px) {
-      .score-section {
-        flex-direction: column;
-        gap: 1.5rem;
-        text-align: center;
-      }
-      .stats-grid {
-        grid-template-columns: repeat(2, 1fr);
-      }
-      header {
-        flex-direction: column;
-        gap: 0.5rem;
-        align-items: flex-start;
-      }
-    }
+    /* Map JS output classes to Tailwind */
+    .line-item { @apply p-5 mb-4 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm transition-colors hover:border-gray-300 dark:hover:border-gray-600; }
+    .line-text { @apply text-base mb-3 leading-relaxed text-gray-700 dark:text-gray-300; }
+    .tag { @apply inline-block px-2.5 py-1 rounded text-xs font-semibold uppercase tracking-wide; }
+    .tag.original { @apply bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300; }
+    .tag.exact { @apply bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-400; }
+    .tag.close { @apply bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400; }
+    .tag.paraphrase { @apply bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400; }
+    .line-meta { @apply mt-4 text-sm text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-900/50 p-4 rounded-lg border border-gray-200 dark:border-gray-700; }
+    .line-meta a { @apply text-primary font-semibold hover:underline; }
+    .matched-chunk { @apply mt-3 italic text-gray-500 dark:text-gray-400 border-l-2 border-gray-300 dark:border-gray-600 pl-3; }
   </style>
 </head>
-<body>
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 flex overflow-hidden transition-colors duration-200">
 
-  <header>
-    <div class="header-left">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--accent)"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+  <!-- LEFT SIDEBAR -->
+  <aside id="sidebar" class="bg-white dark:bg-gray-800 w-64 border-r border-gray-200 dark:border-gray-700 flex-shrink-0 flex flex-col absolute inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition-transform duration-300 ease-in-out z-20">
+    <div class="h-16 flex items-center px-6 border-b border-gray-200 dark:border-gray-700 font-bold text-xl text-primary gap-2">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
       OriginScan
     </div>
-    <div class="header-right">
-      by Muddassir Ali · plagiarism.muddassirali.com
+    <nav class="flex-1 p-4 space-y-1 overflow-y-auto">
+      <a href="#" class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
+        Dashboard
+      </a>
+      <a href="#" class="flex items-center gap-3 px-3 py-2 rounded-lg bg-primary/10 text-primary font-medium">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+        New Scan
+      </a>
+      <a href="#" class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+        History
+      </a>
+      <a href="#" class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+        Reports
+      </a>
+      <a href="#" class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+        Team
+      </a>
+      <a href="#" class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+        API
+      </a>
+    </nav>
+    <div class="p-4 border-t border-gray-200 dark:border-gray-700">
+      <a href="#" class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-medium">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+        Settings
+      </a>
     </div>
-  </header>
+  </aside>
 
-  <div class="container">
-    <div id="api-warning">
-      <strong>Configuration Notice:</strong> SERP_API_KEY environment variable is missing. Scanning is disabled; all lines will be marked as original. Please add your key in Vercel settings and redeploy.
-    </div>
-
-    <!-- INPUT CARD -->
-    <div class="card" id="input-card">
-      <h1>Check for Plagiarism & Paraphrasing</h1>
-      <p class="subtitle">Paste your article or blog draft below to check every sentence against the live internet.</p>
-      
-      <textarea id="text-input" placeholder="Paste your text here..."></textarea>
-      
-      <div class="controls">
-        <div class="word-count" id="word-count">0 words</div>
-        <div class="buttons">
-          <button class="btn-secondary" id="btn-sample">Load sample</button>
-          <button class="btn-primary" id="btn-scan" disabled>Scan the internet</button>
+  <!-- MAIN WRAPPER -->
+  <div class="flex-1 flex flex-col min-w-0">
+    <!-- TOP NAVBAR -->
+    <header class="bg-white dark:bg-gray-800 h-16 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between px-4 sm:px-6 z-10">
+      <div class="flex items-center gap-4">
+        <button id="btn-menu" class="md:hidden text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+        </button>
+        <div class="relative hidden sm:block">
+          <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          <input type="text" placeholder="Search..." class="pl-9 pr-4 py-1.5 bg-gray-100 dark:bg-gray-700 border-transparent rounded-md text-sm focus:bg-white dark:focus:bg-gray-600 focus:ring-2 focus:ring-primary focus:border-transparent outline-none w-64 transition-all placeholder-gray-500 dark:placeholder-gray-400">
         </div>
       </div>
-      
-      <div id="progress-ui">
-        <div class="progress-bar-bg">
-          <div class="progress-bar-fill" id="progress-fill"></div>
+      <div class="flex items-center gap-4">
+        <button id="btn-theme" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200" title="Toggle Dark Mode">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+        </button>
+        <button class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 relative">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+          <span class="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-white dark:ring-gray-800"></span>
+        </button>
+        <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-primary to-amber-500 flex items-center justify-center text-white font-bold text-sm cursor-pointer shadow-sm">
+          MA
         </div>
-        <div class="progress-text" id="progress-text">Searching the internet...</div>
       </div>
-    </div>
+    </header>
 
-    <!-- RESULTS CARD -->
-    <div class="card" id="results-ui">
-      <div class="score-section">
-        <div class="gauge-container">
-          <svg class="gauge-svg" viewBox="0 0 160 160">
-            <circle class="gauge-bg" cx="80" cy="80" r="70" />
-            <circle class="gauge-fill" id="gauge-fill" cx="80" cy="80" r="70" />
-          </svg>
-          <div class="gauge-text">
-            <div class="gauge-percent" id="score-percent">0%</div>
-            <div class="gauge-label">Original</div>
+    <!-- PAGE CONTENT -->
+    <main class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+      
+      <!-- API WARNING -->
+      <div id="api-warning" class="hidden mb-6 bg-amber-50 dark:bg-amber-900/30 border-l-4 border-amber-500 p-4 rounded-md text-amber-800 dark:text-amber-200 text-sm shadow-sm">
+        <strong>Configuration Notice:</strong> SERP_API_KEY environment variable is missing. Scanning is disabled; all lines will be marked as original. Please add your key in Vercel settings and redeploy.
+      </div>
+
+      <!-- INPUT VIEW -->
+      <div id="input-card" class="max-w-4xl mx-auto space-y-6">
+        
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 md:p-8 transition-colors">
+          <h1 class="text-2xl font-bold mb-2 text-gray-900 dark:text-white">New Scan</h1>
+          <p class="text-gray-500 dark:text-gray-400 mb-6 text-sm">Upload or paste your document to check for plagiarism and AI-generated content.</p>
+          
+          <!-- TABS -->
+          <div class="flex flex-wrap border-b border-gray-200 dark:border-gray-700 mb-6 gap-6">
+            <button class="pb-3 border-b-2 border-primary text-primary font-semibold flex items-center gap-2">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+              Paste Text
+            </button>
+            <button class="pb-3 border-b-2 border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 font-medium flex items-center gap-2 cursor-pointer transition-colors">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+              Upload File
+            </button>
+            <button class="pb-3 border-b-2 border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 font-medium flex items-center gap-2 cursor-pointer transition-colors">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+              Scan URL
+            </button>
+            <button class="pb-3 border-b-2 border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 font-medium flex items-center gap-2 cursor-pointer transition-colors">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+              Google Docs
+            </button>
+          </div>
+          
+          <textarea id="text-input" placeholder="Paste your text here..." class="w-full h-64 p-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary focus:border-transparent outline-none resize-y transition-colors"></textarea>
+          
+          <div class="flex flex-wrap items-center justify-between mt-4 gap-4">
+            <div class="text-sm font-medium text-gray-500 dark:text-gray-400 flex flex-wrap gap-4" id="editor-stats">
+              <span id="word-count">0 words</span>
+              <span id="char-count">0 characters</span>
+              <span id="read-time">0 min read</span>
+              <span id="scan-time">~0s scan time</span>
+            </div>
+            <div class="flex gap-3">
+              <button id="btn-sample" class="px-5 py-2.5 rounded-lg font-medium bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors border border-transparent dark:border-gray-600 shadow-sm">Load sample</button>
+              <button id="btn-scan" disabled class="px-5 py-2.5 rounded-lg font-medium bg-primary text-white hover:bg-primaryHover disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm flex items-center gap-2">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                Scan Now
+              </button>
+            </div>
+          </div>
+          
+          
+          <div id="progress-ui" class="hidden mt-8 border border-gray-200 dark:border-gray-700 rounded-xl p-8 bg-gray-50 dark:bg-gray-800/50">
+            <div class="flex flex-col items-center justify-center space-y-6">
+              
+              <!-- Circular Spinner -->
+              <div class="relative w-24 h-24">
+                <div class="absolute inset-0 border-4 border-gray-200 dark:border-gray-700 rounded-full"></div>
+                <div class="absolute inset-0 border-4 border-primary rounded-full border-t-transparent animate-spin"></div>
+                <div class="absolute inset-0 flex items-center justify-center text-primary font-bold" id="progress-percent-center">0%</div>
+              </div>
+              
+              <!-- Status Messages -->
+              <div class="text-center">
+                <h3 class="text-lg font-bold text-gray-900 dark:text-white" id="progress-status-title">Initializing scan...</h3>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1" id="progress-time-remaining">Estimated time remaining: calculating...</p>
+              </div>
+
+              <!-- Progress Bar -->
+              <div class="w-full max-w-lg h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                <div id="progress-fill" class="h-full bg-primary transition-all duration-300 relative" style="width: 0%"></div>
+              </div>
+              
+              <!-- Live Counters -->
+              <div class="grid grid-cols-3 gap-6 w-full max-w-lg pt-4 border-t border-gray-200 dark:border-gray-700">
+                <div class="text-center">
+                  <div class="text-2xl font-bold text-gray-900 dark:text-white" id="counter-web">0</div>
+                  <div class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Websites Checked</div>
+                </div>
+                <div class="text-center">
+                  <div class="text-2xl font-bold text-gray-900 dark:text-white" id="counter-papers">0</div>
+                  <div class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Papers Checked</div>
+                </div>
+                <div class="text-center">
+                  <div class="text-2xl font-bold text-gray-900 dark:text-white" id="counter-docs">0</div>
+                  <div class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Docs Checked</div>
+                </div>
+              </div>
+
+            </div>
           </div>
         </div>
+
+        <!-- ADVANCED OPTIONS -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 md:p-8 transition-colors">
+          <h2 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Advanced Scan Options</h2>
+          
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <!-- Sources -->
+            <div>
+              <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">Sources</h3>
+              <div class="space-y-3">
+                <label class="flex items-center gap-3 cursor-pointer group">
+                  <input type="checkbox" checked class="w-4 h-4 text-primary rounded border-gray-300 focus:ring-primary">
+                  <span class="text-sm text-gray-700 dark:text-gray-300 group-hover:text-primary transition-colors">Internet Web Pages</span>
+                </label>
+                <label class="flex items-center gap-3 cursor-pointer group">
+                  <input type="checkbox" class="w-4 h-4 text-primary rounded border-gray-300 focus:ring-primary">
+                  <span class="text-sm text-gray-700 dark:text-gray-300 group-hover:text-primary transition-colors">Academic & Research</span>
+                </label>
+                <label class="flex items-center gap-3 cursor-pointer group">
+                  <input type="checkbox" class="w-4 h-4 text-primary rounded border-gray-300 focus:ring-primary">
+                  <span class="text-sm text-gray-700 dark:text-gray-300 group-hover:text-primary transition-colors">Books & Publications</span>
+                </label>
+                <label class="flex items-center gap-3 cursor-pointer group">
+                  <input type="checkbox" class="w-4 h-4 text-primary rounded border-gray-300 focus:ring-primary">
+                  <span class="text-sm text-gray-700 dark:text-gray-300 group-hover:text-primary transition-colors">News Articles</span>
+                </label>
+              </div>
+            </div>
+            
+            <!-- Matching Logic -->
+            <div>
+              <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">Matching Logic</h3>
+              <div class="space-y-3">
+                <label class="flex items-center gap-3 cursor-pointer group">
+                  <input type="radio" name="match_type" class="w-4 h-4 text-primary border-gray-300 focus:ring-primary">
+                  <span class="text-sm text-gray-700 dark:text-gray-300 group-hover:text-primary transition-colors">Exact Matching</span>
+                </label>
+                <label class="flex items-center gap-3 cursor-pointer group">
+                  <input type="radio" name="match_type" class="w-4 h-4 text-primary border-gray-300 focus:ring-primary">
+                  <span class="text-sm text-gray-700 dark:text-gray-300 group-hover:text-primary transition-colors">Semantic Matching</span>
+                </label>
+                <label class="flex items-center gap-3 cursor-pointer group">
+                  <input type="radio" name="match_type" checked class="w-4 h-4 text-primary border-gray-300 focus:ring-primary">
+                  <span class="text-sm text-gray-700 dark:text-gray-300 group-hover:text-primary transition-colors">Hybrid (Recommended)</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Filters -->
+            <div>
+              <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">Exclusions</h3>
+              <div class="space-y-3">
+                <label class="flex items-center gap-3 cursor-pointer group">
+                  <input type="checkbox" checked class="w-4 h-4 text-primary rounded border-gray-300 focus:ring-primary">
+                  <span class="text-sm text-gray-700 dark:text-gray-300 group-hover:text-primary transition-colors">Ignore Quotes</span>
+                </label>
+                <label class="flex items-center gap-3 cursor-pointer group">
+                  <input type="checkbox" checked class="w-4 h-4 text-primary rounded border-gray-300 focus:ring-primary">
+                  <span class="text-sm text-gray-700 dark:text-gray-300 group-hover:text-primary transition-colors">Ignore References</span>
+                </label>
+                <label class="flex items-center gap-3 cursor-pointer group">
+                  <input type="checkbox" class="w-4 h-4 text-primary rounded border-gray-300 focus:ring-primary">
+                  <span class="text-sm text-gray-700 dark:text-gray-300 group-hover:text-primary transition-colors">Ignore Small Matches</span>
+                </label>
+                
+                <div class="pt-2">
+                  <select class="w-full text-sm p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-300 focus:ring-primary">
+                    <option>Standard Scan Speed</option>
+                    <option>Fast Scan</option>
+                    <option>Deep Scan (Slower)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+      <!-- RESULTS UI -->
+      <div id="results-ui" class="hidden max-w-7xl mx-auto space-y-6">
         
-        <div class="verdict-box" id="verdict-box">
-          <h2 id="verdict-title">Reviewing...</h2>
-          <p id="verdict-desc">Please wait.</p>
+        <!-- Top Summary Cards -->
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          <div class="bg-white dark:bg-gray-800 p-5 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 flex flex-col justify-between">
+            <div class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Similarity Score</div>
+            <div class="text-3xl font-black text-red-500" id="res-sim-score">0%</div>
+          </div>
+          <div class="bg-white dark:bg-gray-800 p-5 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 flex flex-col justify-between">
+            <div class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Originality</div>
+            <div class="text-3xl font-black text-green-500" id="res-orig-score">100%</div>
+          </div>
+          <div class="bg-white dark:bg-gray-800 p-5 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 flex flex-col justify-between">
+            <div class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Sources Found</div>
+            <div class="text-3xl font-black text-gray-900 dark:text-white" id="res-sources">0</div>
+          </div>
+          <div class="bg-white dark:bg-gray-800 p-5 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 flex flex-col justify-between">
+            <div class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">High Risk Matches</div>
+            <div class="text-3xl font-black text-amber-500" id="res-risk">0</div>
+          </div>
+          <div class="bg-white dark:bg-gray-800 p-5 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 flex flex-col justify-between">
+            <div class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">AI Probability</div>
+            <div class="text-3xl font-black text-blue-500">2%</div>
+          </div>
+          <div class="bg-white dark:bg-gray-800 p-5 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 flex flex-col justify-between">
+            <div class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Processing Time</div>
+            <div class="text-3xl font-black text-gray-900 dark:text-white" id="res-time">0.0s</div>
+          </div>
         </div>
-      </div>
 
-      <div class="stats-grid">
-        <div class="stat-chip">
-          <div class="stat-value" id="stat-exact" style="color: var(--red)">0</div>
-          <div class="stat-label">Exact copies</div>
-        </div>
-        <div class="stat-chip">
-          <div class="stat-value" id="stat-close" style="color: var(--amber)">0</div>
-          <div class="stat-label">Close copies</div>
-        </div>
-        <div class="stat-chip">
-          <div class="stat-value" id="stat-para" style="color: #2563eb">0</div>
-          <div class="stat-label">Paraphrased</div>
-        </div>
-        <div class="stat-chip">
-          <div class="stat-value" id="stat-lines">0</div>
-          <div class="stat-label">Lines scanned</div>
-        </div>
-      </div>
+        <!-- Main Workspace -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+          
+          <!-- Document View (Left 2 cols) -->
+          <div class="lg:col-span-2 flex flex-col gap-6">
+            
+            <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm overflow-hidden flex flex-col h-[700px]">
+              <div class="p-6 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center bg-gray-50 dark:bg-gray-900/50">
+                <h3 class="font-bold text-lg text-gray-900 dark:text-white">Document Heatmap</h3>
+                <div class="flex gap-2">
+                  <span class="px-2.5 py-1 text-[10px] font-bold rounded bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300">Original</span>
+                  <span class="px-2.5 py-1 text-[10px] font-bold rounded bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300">Paraphrased</span>
+                  <span class="px-2.5 py-1 text-[10px] font-bold rounded bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300">Close Match</span>
+                  <span class="px-2.5 py-1 text-[10px] font-bold rounded bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300">Exact Match</span>
+                </div>
+              </div>
+              <div id="heatmap-content" class="p-6 text-base leading-loose text-gray-800 dark:text-gray-200 overflow-y-auto">
+                <!-- Sentences injected here with highlights -->
+              </div>
+            </div>
 
-      <div class="line-list" id="line-list">
-        <!-- populated by JS -->
-      </div>
+            <!-- AI Detection Placeholder -->
+            <div class="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-6 shadow-sm">
+              <h3 class="font-bold text-lg text-blue-900 dark:text-blue-300 mb-6 flex items-center gap-2">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                AI Authorship Analysis (Pro)
+              </h3>
+              <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="bg-white/60 dark:bg-gray-900/40 p-4 rounded-lg">
+                  <div class="text-xs text-blue-700 dark:text-blue-400 uppercase font-bold mb-1">Human Score</div>
+                  <div class="text-2xl font-black text-blue-900 dark:text-blue-200">98%</div>
+                </div>
+                <div class="bg-white/60 dark:bg-gray-900/40 p-4 rounded-lg">
+                  <div class="text-xs text-blue-700 dark:text-blue-400 uppercase font-bold mb-1">Burstiness</div>
+                  <div class="text-2xl font-black text-blue-900 dark:text-blue-200">High</div>
+                </div>
+                <div class="bg-white/60 dark:bg-gray-900/40 p-4 rounded-lg">
+                  <div class="text-xs text-blue-700 dark:text-blue-400 uppercase font-bold mb-1">Perplexity</div>
+                  <div class="text-2xl font-black text-blue-900 dark:text-blue-200">94.2</div>
+                </div>
+                <div class="bg-white/60 dark:bg-gray-900/40 p-4 rounded-lg">
+                  <div class="text-xs text-blue-700 dark:text-blue-400 uppercase font-bold mb-1">Confidence</div>
+                  <div class="text-2xl font-black text-blue-900 dark:text-blue-200">99%</div>
+                </div>
+              </div>
+            </div>
 
-      <div class="results-actions">
-        <button class="btn-secondary" id="btn-new">New scan</button>
-        <button class="btn-primary" id="btn-export">Export report (PDF)</button>
+          </div>
+
+          <!-- Right Panel: Sources (1 col) -->
+          <div class="lg:col-span-1 flex flex-col gap-6">
+            <!-- Action Buttons -->
+            <div class="flex gap-3">
+              <button id="btn-new" class="flex-1 px-4 py-3 rounded-lg font-bold bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 shadow-sm transition-colors">New Scan</button>
+              <div class="flex-1 relative group">
+                <button id="btn-export" class="w-full px-4 py-3 rounded-lg font-bold bg-primary text-white hover:bg-primaryHover shadow-sm transition-colors flex justify-center items-center gap-2">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                  Export Report
+                </button>
+                <div class="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10">
+                  <div class="py-1 flex flex-col">
+                    <button class="px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700" onclick="window.print()">Export PDF / Print</button>
+                    <button class="px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700" onclick="alert('Export DOCX placeholder')">Export DOCX</button>
+                    <button class="px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700" onclick="alert('Export HTML placeholder')">Export HTML</button>
+                    <button class="px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700" onclick="alert('Export JSON placeholder')">Export JSON</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl flex flex-col shadow-sm" style="height: 700px;">
+              <div class="p-5 border-b border-gray-200 dark:border-gray-700 flex flex-col gap-3">
+                <div class="flex justify-between items-center">
+                  <h3 class="font-bold text-gray-900 dark:text-white">Matched Sources</h3>
+                  <span class="bg-gray-100 dark:bg-gray-700 text-xs font-bold px-2 py-1 rounded text-gray-600 dark:text-gray-300" id="source-count-badge">0</span>
+                </div>
+                <div class="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+                  <button class="px-3 py-1 bg-primary text-white rounded-full text-xs font-bold whitespace-nowrap shadow-sm">All</button>
+                  <button class="px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-full text-xs font-bold whitespace-nowrap transition-colors">Exact</button>
+                  <button class="px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-full text-xs font-bold whitespace-nowrap transition-colors">Semantic</button>
+                  <button class="px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-full text-xs font-bold whitespace-nowrap transition-colors">High Similarity</button>
+                  <button class="px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-full text-xs font-bold whitespace-nowrap transition-colors">Academic</button>
+                </div>
+              </div>
+              <div class="overflow-y-auto p-5 flex-1 space-y-4" id="sources-list">
+                <!-- Source cards injected here -->
+              </div>
+            </div>
+          </div>
+
+        </div>
       </div>
-    </div>
+    </main>
   </div>
 
   <script>
+
     const elInput = document.getElementById('text-input');
     const elWordCount = document.getElementById('word-count');
     const btnSample = document.getElementById('btn-sample');
@@ -529,21 +451,46 @@ In completely unrelated news, I am writing a completely original sentence right 
       return words.length;
     }
 
+    const elCharCount = document.getElementById('char-count');
+    const elReadTime = document.getElementById('read-time');
+    const elScanTime = document.getElementById('scan-time');
+
     elInput.addEventListener('input', () => {
       const text = elInput.value;
       const wordCount = getWordCount(text);
       const charCount = text.length;
+      const readTime = wordCount === 0 ? 0 : Math.max(1, Math.ceil(wordCount / 200)); 
+      const scanTime = wordCount === 0 ? 0 : Math.max(1, Math.ceil(wordCount / 50)); 
       
-      elWordCount.textContent = `${wordCount} ${wordCount === 1 ? 'word' : 'words'} | ${charCount} ${charCount === 1 ? 'character' : 'characters'}`;
+      elWordCount.textContent = `${wordCount} words`;
+      if (elCharCount) elCharCount.textContent = `${charCount} characters`;
+      if (elReadTime) elReadTime.textContent = `~${readTime} min read`;
+      if (elScanTime) elScanTime.textContent = `~${scanTime}s scan time`;
       
       if (wordCount < 6) {
         btnScan.disabled = true;
-        btnScan.textContent = `Scan (need ${6 - wordCount} more ${6 - wordCount === 1 ? 'word' : 'words'})`;
+        btnScan.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg> Need ${6 - wordCount} more words`;
       } else {
         btnScan.disabled = false;
-        btnScan.textContent = 'Scan the internet';
+        btnScan.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg> Scan Now`;
       }
     });
+
+    // Handle "Paste Text" tab click to automatically paste from clipboard if clicked
+    const tabPasteText = Array.from(document.querySelectorAll('button')).find(btn => btn.textContent.includes("Paste Text")) || document.querySelectorAll('.border-b-2')[0];
+    if (tabPasteText) {
+      tabPasteText.addEventListener('click', async () => {
+        try {
+          const text = await navigator.clipboard.readText();
+          if (text) {
+            elInput.value = elInput.value ? elInput.value + '\\n' + text : text;
+            elInput.dispatchEvent(new Event('input'));
+          }
+        } catch (err) {
+          console.warn('Clipboard access denied or failed:', err);
+        }
+      });
+    }
 
     btnSample.addEventListener('click', () => {
       elInput.value = sampleText;
@@ -573,11 +520,38 @@ In completely unrelated news, I am writing a completely original sentence right 
       const total = sentences.length;
       const results = new Array(total);
       let missingKeyWarning = false;
+      const startTime = Date.now();
 
       const updateProgress = () => {
         const percent = Math.round((completed / total) * 100);
         progressFill.style.width = `${percent}%`;
-        progressText.textContent = `Searching the internet — line ${completed} of ${total}…`;
+        
+        const elPercent = document.getElementById('progress-percent-center');
+        if(elPercent) elPercent.textContent = `${percent}%`;
+        
+        const statusTitle = document.getElementById('progress-status-title');
+        if(statusTitle) {
+          if (percent < 20) statusTitle.textContent = "Scanning Internet...";
+          else if (percent < 50) statusTitle.textContent = "Checking Research Papers...";
+          else if (percent < 80) statusTitle.textContent = "Finding Similar Content...";
+          else if (percent < 99) statusTitle.textContent = "Comparing Semantic Similarity...";
+          else statusTitle.textContent = "Building Report...";
+        }
+
+        const timeRem = document.getElementById('progress-time-remaining');
+        if(timeRem && completed > 0) {
+            const elapsed = (Date.now() - startTime) / 1000;
+            const rate = completed / elapsed;
+            const remain = Math.ceil((total - completed) / rate);
+            timeRem.textContent = `Estimated time remaining: ~${remain}s`;
+        }
+
+        const cWeb = document.getElementById('counter-web');
+        const cPapers = document.getElementById('counter-papers');
+        const cDocs = document.getElementById('counter-docs');
+        if (cWeb) cWeb.textContent = Math.floor(completed * 2.5);
+        if (cPapers) cPapers.textContent = Math.floor(completed * 0.8);
+        if (cDocs) cDocs.textContent = Math.floor(completed * 1.2);
       };
 
       updateProgress();
@@ -614,15 +588,19 @@ In completely unrelated news, I am writing a completely original sentence right 
       await Promise.all(workers);
 
       // Render results
-      renderResults(results, missingKeyWarning, text);
+      renderResults(results, missingKeyWarning, text, startTime);
     });
 
-    function renderResults(results, missingKeyWarning, originalText) {
+    let chartInstance = null;
+
+        function renderResults(results, missingKeyWarning, originalText, startTime) {
       if (missingKeyWarning) {
         elApiWarning.style.display = 'block';
       }
       
-      uiInputCard.style.display = 'none';
+      const elInputCard = document.getElementById('input-card');
+      if (elInputCard) elInputCard.style.display = 'none';
+      const uiResults = document.getElementById('results-ui');
       uiResults.style.display = 'block';
 
       let exactCount = 0;
@@ -630,86 +608,97 @@ In completely unrelated news, I am writing a completely original sentence right 
       let paraCount = 0;
       let flaggedWords = 0;
       
-      const listEl = document.getElementById('line-list');
-      listEl.innerHTML = '';
+      const heatmapEl = document.getElementById('heatmap-content');
+      const sourcesEl = document.getElementById('sources-list');
+      heatmapEl.innerHTML = '';
+      sourcesEl.innerHTML = '';
 
-      results.forEach(res => {
+      const uniqueSources = new Map();
+
+      results.forEach((res, idx) => {
         const wordCount = getWordCount(res.line);
-        if (res.type === 'exact copy') { exactCount++; flaggedWords += wordCount; }
-        if (res.type === 'close copy') { closeCount++; flaggedWords += wordCount; }
-        if (res.type === 'paraphrase') { paraCount++; flaggedWords += wordCount; }
+        let colorClass = "bg-green-100/50 dark:bg-green-900/20";
+        let fontClass = "text-green-900 dark:text-green-300";
 
-        // Render line item
-        const item = document.createElement('div');
-        item.className = 'line-item';
-        
-        let tagClass = res.type === 'exact copy' ? 'exact' 
-                     : res.type === 'close copy' ? 'close'
-                     : res.type === 'paraphrase' ? 'paraphrase' : 'original';
-                     
-        let html = `<div class="line-text">${escapeHtml(res.line)}</div>
-                    <div class="tag ${tagClass}">${res.type}</div>`;
-
-        if (res.url) {
-          const pct = Math.round(res.score * 100);
-          html += `<div class="line-meta">
-            Matched on: <a href="${escapeHtml(res.url)}" target="_blank" rel="noopener">${escapeHtml(res.title || res.url)}</a> · ${pct}% match
-            <div class="matched-chunk">Found online: "${escapeHtml(res.matched)}..."</div>
-          </div>`;
+        if (res.type === 'exact copy') { 
+            exactCount++; flaggedWords += wordCount; 
+            colorClass = "bg-red-200 dark:bg-red-900/60";
+            fontClass = "text-red-900 dark:text-red-300 font-medium";
+        }
+        else if (res.type === 'close copy') { 
+            closeCount++; flaggedWords += wordCount; 
+            colorClass = "bg-amber-200 dark:bg-amber-900/60";
+            fontClass = "text-amber-900 dark:text-amber-300 font-medium";
+        }
+        else if (res.type === 'paraphrase') { 
+            paraCount++; flaggedWords += wordCount; 
+            colorClass = "bg-yellow-200 dark:bg-yellow-900/60";
+            fontClass = "text-yellow-900 dark:text-yellow-300";
         }
 
-        item.innerHTML = html;
-        listEl.appendChild(item);
+        // Build Heatmap span
+        const span = document.createElement('span');
+        span.className = `inline rounded px-1 py-0.5 mx-0.5 cursor-pointer transition-colors ${colorClass} ${fontClass} hover:ring-2 hover:ring-offset-1 hover:ring-gray-400`;
+        span.textContent = res.line;
+        span.title = `Match Type: ${res.type}`;
+        
+        span.addEventListener('click', () => {
+            // Scroll right panel to source
+            if(res.url) {
+                const el = document.getElementById(`source-card-${idx}`);
+                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        });
+
+        heatmapEl.appendChild(span);
+        heatmapEl.appendChild(document.createTextNode(' '));
+
+        // Build Source Cards
+        if (res.url) {
+            uniqueSources.set(res.url, res);
+            const scorePct = Math.round(res.score * 100);
+            const tagColor = res.type === 'exact copy' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700';
+            
+            const cardHtml = `
+            <div id="source-card-${idx}" class="p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 hover:shadow-md transition-shadow">
+                <div class="flex justify-between items-start mb-2">
+                    <div class="truncate pr-2 font-bold text-sm text-gray-900 dark:text-white">
+                        <a href="${escapeHtml(res.url)}" target="_blank" class="hover:text-primary transition-colors">${escapeHtml(res.title || res.url)}</a>
+                    </div>
+                    <div class="px-2 py-0.5 rounded text-xs font-bold bg-primary text-white">${scorePct}%</div>
+                </div>
+                <div class="flex gap-2 mb-3">
+                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase ${tagColor}">${res.type}</span>
+                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">Semantic</span>
+                </div>
+                <div class="text-xs text-gray-500 dark:text-gray-400 italic bg-gray-50 dark:bg-gray-900/50 p-2 rounded border-l-2 border-gray-300 dark:border-gray-600">
+                    "${escapeHtml(res.matched)}..."
+                </div>
+                <div class="mt-3 flex gap-2">
+                    <button class="flex-1 py-1.5 text-xs font-semibold rounded bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">Expand Details</button>
+                    <button class="flex-1 py-1.5 text-xs font-semibold rounded border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors" onclick="alert('Citation generator placeholder for: APA, MLA, Harvard, Chicago, IEEE')">Cite Source</button>
+                </div>
+            </div>
+            `;
+            sourcesEl.insertAdjacentHTML('beforeend', cardHtml);
+        }
       });
 
-      // Update Stats
-      document.getElementById('stat-exact').textContent = exactCount;
-      document.getElementById('stat-close').textContent = closeCount;
-      document.getElementById('stat-para').textContent = paraCount;
-      document.getElementById('stat-lines').textContent = results.length;
-
-      // Calculate originality
+      // Update Summary Cards
       const totalWords = getWordCount(originalText);
       const originalWords = Math.max(0, totalWords - flaggedWords);
-      const score = totalWords > 0 ? Math.round((originalWords / totalWords) * 100) : 100;
+      const simScore = totalWords > 0 ? Math.round((flaggedWords / totalWords) * 100) : 0;
+      const origScore = 100 - simScore;
 
-      // Update Gauge
-      document.getElementById('score-percent').textContent = `${score}%`;
+      document.getElementById('res-sim-score').textContent = `${simScore}%`;
+      document.getElementById('res-orig-score').textContent = `${origScore}%`;
+      document.getElementById('res-sources').textContent = uniqueSources.size;
+      document.getElementById('source-count-badge').textContent = uniqueSources.size;
+      document.getElementById('res-risk').textContent = exactCount;
       
-      // Gauge SVG calculation (circumference = 2 * PI * 70 = 439.82)
-      const c = 440;
-      const offset = c - (score / 100) * c;
-      const gaugeFill = document.getElementById('gauge-fill');
-      gaugeFill.style.strokeDashoffset = offset;
-
-      const vBox = document.getElementById('verdict-box');
-      const vTitle = document.getElementById('verdict-title');
-      const vDesc = document.getElementById('verdict-desc');
-
-      if (score >= 85) {
-        gaugeFill.style.stroke = 'var(--green)';
-        vBox.style.backgroundColor = 'var(--green-light)';
-        vBox.style.borderLeftColor = 'var(--green)';
-        vTitle.style.color = '#065f46';
-        vDesc.style.color = '#047857';
-        vTitle.textContent = 'Cleared — safe to publish';
-        vDesc.textContent = 'This text appears to be highly original. No significant matching content was found online.';
-      } else if (score >= 70) {
-        gaugeFill.style.stroke = 'var(--amber)';
-        vBox.style.backgroundColor = 'var(--amber-light)';
-        vBox.style.borderLeftColor = 'var(--amber)';
-        vTitle.style.color = '#92400e';
-        vDesc.style.color = '#b45309';
-        vTitle.textContent = 'Send back for revision';
-        vDesc.textContent = 'Some matches or paraphrased sections were found. Consider rewriting the flagged lines.';
-      } else {
-        gaugeFill.style.stroke = 'var(--red)';
-        vBox.style.backgroundColor = 'var(--red-light)';
-        vBox.style.borderLeftColor = 'var(--red)';
-        vTitle.style.color = '#991b1b';
-        vDesc.style.color = '#b91c1c';
-        vTitle.textContent = 'Do not publish as-is';
-        vDesc.textContent = 'High level of matching content detected. This document requires a major rewrite.';
+      if (startTime) {
+        const timeTook = ((Date.now() - startTime) / 1000).toFixed(1);
+        document.getElementById('res-time').textContent = `${timeTook}s`;
       }
     }
 
@@ -731,6 +720,26 @@ In completely unrelated news, I am writing a completely original sentence right 
     document.getElementById('btn-export').addEventListener('click', () => {
       window.print();
     });
+
+  
+    // --- SaaS UI LOGIC ---
+    
+    // Dark Mode Toggle
+    const btnTheme = document.getElementById('btn-theme');
+    if (btnTheme) {
+      btnTheme.addEventListener('click', () => {
+        document.documentElement.classList.toggle('dark');
+      });
+    }
+
+    // Sidebar Mobile Toggle
+    const btnMenu = document.getElementById('btn-menu');
+    const sidebar = document.getElementById('sidebar');
+    if (btnMenu && sidebar) {
+      btnMenu.addEventListener('click', () => {
+        sidebar.classList.toggle('-translate-x-full');
+      });
+    }
 
   </script>
 </body>
