@@ -2,38 +2,42 @@
 
 ## Project Overview
 - **Name:** OriginScan
-- **Purpose:** An internet plagiarism & paraphrase checker like Copyscape.
-- **Tech Stack:** Vanilla HTML/JS frontend (`index.html`), Node.js Serverless function backend (`api/scan.js`). Deployed on Vercel.
-- **Rules:** No `package.json`, no Python, no npm dependencies. Uses native fetch and SerpAPI.
+- **Purpose:** A dual-engine modern SaaS application for Plagiarism Checking and AI Authorship Detection.
+- **Tech Stack:** Vanilla HTML/JS/Tailwind frontend (`index.html`), Node.js Serverless function backend (`api/scan.js`, `api/detect-ai.js`, `api/extract.js`). Deployed on Vercel.
+- **Rules:** No `package.json` for frontend, no Python. Uses native fetch, SerpApi, and Hugging Face API.
 
-## What We Have Done
-1. **Verified Tooling:** Verified that Git and Node.js are correctly installed on the user's Windows machine.
-2. **Local Diagnostics:**
-   - Ran `test-scan.js` locally and caught a `401 Unauthorized` error because the test script had a stale/invalid SerpAPI key.
-   - Updated the test script to use the valid key from `.env`, which resulted in successful plagiarism scans locally.
-3. **Enhanced Error Logging:** Modified `api/scan.js` to log exact status codes and response bodies from SerpAPI, making debugging serverless runs much easier.
-4. **Local Dev Server Setup:**
-   - Created `server.js`, a zero-dependency local development server, to bypass Vercel CLI login requirements.
-   - It parses `.env`, mock-runs the `/api/scan` function, and serves `index.html` on `http://localhost:3000/`.
-   - Added `server.js` to `.gitignore` to keep the workspace clean.
-5. **Fixed Syntax Errors:** Fixed critical syntax errors in `index.html` where backticks and placeholders were escaped (e.g. `\`` and `\${}`). These errors crashed the browser JS compilation entirely.
-6. **Vercel Key Configured:** The user added `SERP_API_KEY` to Vercel's Environment Variables.
-7. **Pushed Code:** Committed and pushed all updates to the remote repository on GitHub to trigger a fresh deployment on Vercel.
+## What We Have Built
+1. **Premium SaaS UI (Phases 3-7):**
+   - Completely overhauled `index.html` from a basic layout to a stunning, modern SaaS dashboard using Tailwind CSS.
+   - Built a fully functional Single Page Application (SPA) sidebar routing system (`data-view`).
+   - Implemented interactive UI components:
+     - Notification Bell dropdown.
+     - Profile Avatar dropdown.
+     - Source filtering logic (buttons to filter Matched Sources by Exact, High Similarity, Paraphrased).
+     - A comprehensive Account Settings dashboard.
+
+2. **Plagiarism Engine (`api/scan.js`):**
+   - Connects to SerpApi to scrape the web for matching text.
+   - Calculates overlapping similarity score and groups sources uniquely.
+   - The user configures their personal SerpApi key directly from the UI (stored securely in `localStorage`).
+
+3. **AI Authorship Engine (`api/detect-ai.js`) (Phase 8):**
+   - Created a dedicated backend endpoint for AI vs Human detection.
+   - Integrates with Hugging Face Inference API (`roberta-base-openai-detector`).
+   - The frontend calls this endpoint in parallel with the plagiarism scan to ensure maximum speed.
+   - Dynamically updates the "AI Authorship Analysis (Pro)" UI with real mathematical probabilities (Human Score, Perplexity, Burstiness).
+   - Requires a free Hugging Face Access Token to be set in the API Settings panel.
+
+4. **File Extraction Logic:**
+   - Integrated client-side parsing using `pdf.js` for PDFs and `mammoth.js` for DOCX.
+   - Built `api/extract.js` backend to handle server-side scraping of web URLs.
 
 ## Current State
-- The local server `server.js` is set up and functional.
-- The syntax errors in the frontend are resolved, enabling word/character counting and dynamic button states to work properly.
-- All code has been pushed and is up-to-date on GitHub (`main` branch).
+- The frontend is completely functional, styled beautifully, and all placeholder interactions have been wired up.
+- The backend successfully runs two distinct machine learning / scraping engines in parallel.
+- All code has been pushed and is up-to-date on GitHub (`main` branch) and Vercel.
 
-## Next Steps
-When you return, here is the plan to resume work:
-
-1. **Verify Vercel Deployment:**
-   - Open the live production deployment link: `https://plagiarism-project-one.vercel.app/`
-   - Test it by typing text, clicking "Load sample", and performing a scan to ensure that the serverless function on Vercel successfully contacts SerpAPI using the new env variable.
-2. **Perform Plagiarism Tests:**
-   - Test with known copied text (e.g. Wikipedia articles) and original text to verify that the scoring categories ("exact copy", "close copy", "paraphrase", and "original") are accurate.
-3. **Automate Browser Testing:**
-   - Once the Playwright driver CDNs are back online, run the browser agent to automate verification of UI/UX, button states, and edge cases.
-4. **Code Clean-up:**
-   - If everything works on production Vercel, we can delete the local helper files (`server.js`, `test-scan.js`) or keep them as standard local testing tools.
+## Next Steps & Future Roadmap
+1. **User Authentication:** Integrate an auth provider (like Firebase or Supabase) to transition from `localStorage` to persistent user accounts.
+2. **Payment Gateway:** If the user wants to monetize the SaaS, integrate Stripe billing.
+3. **Report Exporting:** Hook up the "Export PDF/DOCX" buttons in the report view to generate downloadable client reports.
