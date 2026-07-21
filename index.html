@@ -787,7 +787,7 @@ In completely unrelated news, I am writing a completely original sentence right 
         document.getElementById(targetId).classList.add('block');
       });
     });
-\n    const tabPasteText = Array.from(document.querySelectorAll('button')).find(btn => btn.textContent.includes("Paste Text")) || document.querySelectorAll('.border-b-2')[0];
+    const tabPasteText = Array.from(document.querySelectorAll('button')).find(btn => btn.textContent.includes("Paste Text")) || document.querySelectorAll('.border-b-2')[0];
     if (tabPasteText) {
       tabPasteText.addEventListener('click', async () => {
         try {
