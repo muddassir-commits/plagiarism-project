@@ -18,18 +18,7 @@ module.exports = async function handler(req, res) {
     return res.status(400).json({ error: 'No line provided' });
   }
 
-  // Missing API Key handling (prefer custom key, fallback to env)
-  const apiKey = customApiKey || process.env.SERP_API_KEY;
-  if (!apiKey) {
-    return res.status(200).json({
-      type: 'original',
-      score: 0,
-      url: '',
-      title: '',
-      matched: '',
-      no_key: true
-    });
-  }
+  // No API key required for internal scraper
 
   // 2. Pre-check: Skip lines shorter than 6 words
   const words = line.trim().split(/\s+/).filter(w => w.length > 0);
@@ -44,22 +33,61 @@ module.exports = async function handler(req, res) {
     });
   }
 
-  // 3. Search Google via SerpApi
-  let query = line;
-  if (words.length <= 12) {
-    query = `"${line}"`;
-  }
+  // 3. Search via Custom Scraper (DuckDuckGo HTML)
+  const query = line;
+  const searchUrl = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`;
 
-  const searchUrl = `https://serpapi.com/search.json?engine=google&num=4&q=${encodeURIComponent(query)}&api_key=${apiKey}`;
-
+  let html = '';
   try {
-    const searchRes = await fetch(searchUrl);
-    if (!searchRes.ok) {
-      const errText = await searchRes.text();
-      throw new Error(`SerpAPI error: ${searchRes.status} ${errText}`);
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    const searchRes = await fetch(searchUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36',
+        'Accept-Language': 'en-US,en;q=0.9'
+      }
+    });
+    
+    if (searchRes.status === 429) {
+      if (attempt === 3) throw new Error(`Scraper error: 429 (Rate Limited)`);
+      // Wait before retrying (1.5s, then 3s)
+      await new Promise(r => setTimeout(r, 1500 * attempt));
+      continue;
     }
-    const searchData = await searchRes.json();
-    const results = searchData.organic_results || [];
+    
+    if (!searchRes.ok) {
+      throw new Error(`Scraper error: ${searchRes.status}`);
+    }
+    
+    html = await searchRes.text();
+    break;
+  }
+    const results = [];
+    
+    // Extract each result block safely to avoid misalignment
+    const blockRegex = /<div class="result [^"]*">([\s\S]*?)<\/div>\s*<\/div>\s*<\/div>/g;
+    let blockMatch;
+    
+    while ((blockMatch = blockRegex.exec(html)) !== null) {
+      const block = blockMatch[1];
+      
+      const titleMatch = /<h2 class="result__title">\s*<a[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>\s*<\/h2>/.exec(block);
+      const snippetMatch = /<a class="result__snippet[^>]*>([\s\S]*?)<\/a>/.exec(block);
+      
+      if (titleMatch && snippetMatch) {
+        let rawLink = titleMatch[1];
+        if (rawLink.includes('uddg=')) {
+          rawLink = decodeURIComponent(rawLink.split('uddg=')[1].split('&')[0]);
+        }
+        
+        const titleText = titleMatch[2].replace(/<[^>]+>/g, '').trim();
+        const snippetText = snippetMatch[1].replace(/<[^>]+>/g, '').trim();
+        
+        // Filter ads
+        if (rawLink.includes('y.js?ad_domain') || rawLink.includes('duckduckgo.com/y.js')) continue;
+        
+        results.push({ link: rawLink, title: titleText, snippet: snippetText });
+      }
+    }
 
     let bestResult = {
       type: 'original',
@@ -158,7 +186,7 @@ module.exports = async function handler(req, res) {
       title: '',
       matched: '',
       no_key: false,
-      error: 'Failed to process'
+      error: error.message || 'Failed to process'
     });
   }
 }
