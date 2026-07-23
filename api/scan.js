@@ -35,20 +35,22 @@ module.exports = async function handler(req, res) {
 
   // 3. Search via Custom Scraper (DuckDuckGo HTML)
   const query = line;
-  const searchUrl = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`;
+  const searchUrl = `https://lite.duckduckgo.com/lite/`;
 
   let html = '';
   try {
   for (let attempt = 1; attempt <= 3; attempt++) {
     const searchRes = await fetch(searchUrl, {
+      method: 'POST',
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36',
-        'Accept-Language': 'en-US,en;q=0.9'
-      }
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: `q=${encodeURIComponent(query)}`
     });
     
-    if (searchRes.status === 429) {
-      if (attempt === 3) throw new Error(`Scraper error: 429 (Rate Limited)`);
+    if (searchRes.status === 429 || searchRes.status === 403) {
+      if (attempt === 3) throw new Error(`Scraper error: ${searchRes.status} (Rate Limited or Blocked)`);
       // Wait before retrying (1.5s, then 3s)
       await new Promise(r => setTimeout(r, 1500 * attempt));
       continue;
@@ -59,35 +61,39 @@ module.exports = async function handler(req, res) {
     }
     
     html = await searchRes.text();
+    require('fs').writeFileSync('scratch/debug-scan-out.html', html);
     break;
   }
     const results = [];
     
-    // Extract each result block safely to avoid misalignment
-    const blockRegex = /<div class="result [^"]*">([\s\S]*?)<\/div>\s*<\/div>\s*<\/div>/g;
-    let blockMatch;
+    // Parse DDG Lite
+    // Links: <a rel="nofollow" href="..." class='result-link'>Title</a>
+    // Snippets: <td class='result-snippet'>...</td>
+    const linkRegex = /<a[^>]*href="([^"]+)"[^>]*class=['"]result-link['"][^>]*>([\s\S]*?)<\/a>|<a[^>]*class=['"]result-link['"][^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/gi;
+    const snippetRegex = /<td class='result-snippet'>([\s\S]*?)<\/td>/gi;
     
-    while ((blockMatch = blockRegex.exec(html)) !== null) {
-      const block = blockMatch[1];
-      
-      const titleMatch = /<h2 class="result__title">\s*<a[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>\s*<\/h2>/.exec(block);
-      const snippetMatch = /<a class="result__snippet[^>]*>([\s\S]*?)<\/a>/.exec(block);
-      
-      if (titleMatch && snippetMatch) {
-        let rawLink = titleMatch[1];
-        if (rawLink.includes('uddg=')) {
-          rawLink = decodeURIComponent(rawLink.split('uddg=')[1].split('&')[0]);
-        }
-        
-        const titleText = titleMatch[2].replace(/<[^>]+>/g, '').trim();
-        const snippetText = snippetMatch[1].replace(/<[^>]+>/g, '').trim();
-        
-        // Filter ads
-        if (rawLink.includes('y.js?ad_domain') || rawLink.includes('duckduckgo.com/y.js')) continue;
-        
-        results.push({ link: rawLink, title: titleText, snippet: snippetText });
-      }
+    const links = [];
+    const titles = [];
+    const snippets = [];
+    
+    let match;
+    while ((match = linkRegex.exec(html)) !== null) {
+      links.push(match[1] || match[3]);
+      titles.push((match[2] || match[4]).replace(/<[^>]+>/g, '').trim());
     }
+    while ((match = snippetRegex.exec(html)) !== null) {
+      snippets.push(match[1].replace(/<[^>]+>/g, '').trim());
+    }
+    
+    for (let i = 0; i < Math.min(links.length, snippets.length); i++) {
+       results.push({
+         link: links[i],
+         title: titles[i],
+         snippet: snippets[i]
+       });
+    }
+
+    console.log("DDG Lite extracted results:", results.length);
 
     let bestResult = {
       type: 'original',

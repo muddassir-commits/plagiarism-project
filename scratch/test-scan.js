@@ -8,7 +8,7 @@ async function test() {
   const req = {
     method: 'POST',
     body: {
-      line: 'James Webb Space Telescope is very large.',
+      line: 'The James Webb Space Telescope (JWST) is a space telescope designed to conduct infrared astronomy.',
     }
   };
   
